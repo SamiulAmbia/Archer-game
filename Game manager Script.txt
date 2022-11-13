@@ -1,0 +1,175 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class GameManager : MonoBehaviour
+{
+    public GameObject FirstPlayerPanel;
+    public GameObject PlayerSelect;
+    public GameObject WinPanel;
+    public GameObject LosePanel;
+    public GameObject[] Player;
+    public GameObject[] Enemy;
+
+    public bool EnablePlayer;
+    public bool EnableEnemy;
+
+    int index;
+    int Enemyindex;
+    int upCounter;
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+        EnableEnemy = false;
+        PlayerSelect.SetActive(true);
+        upCounter = 0;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //This enables the Player when its players turn and enables the enemy when its enemy's turn 
+        if (EnablePlayer)
+        {
+            //This checks if there is a player available or not and enables the player
+            if (Player[index] == null)
+            {
+                PlayerSelect.SetActive(true);
+            }
+            else
+            {
+                Player[index].GetComponent<PlayerController>().PointerEn();
+                Player[index].GetComponent<PlayerController>().enabled = true;
+                FirstPlayerPanel.SetActive(true);
+                upCounter = 0;
+                EnablePlayer = false;
+            }
+        }
+        if (EnableEnemy)
+        {
+            //This enables a random enemy
+            Enemyindex = Random.Range(0, 3);
+            if (Enemy[Enemyindex] == null)
+            {
+                //Checks if there is a enemy is available or not
+                Debug.Log("Nothing here");
+                Enemyindex = Random.Range(0, 3);
+            }
+            else
+            {
+                //actives the available enemy
+                Enemy[Enemyindex].GetComponent<EnemyAI>().EnemyPointerEn();
+                Enemy[Enemyindex].GetComponent<EnemyAI>().enabled = true;
+                Enemy[Enemyindex].GetComponent<EnemyAI>().EnemyTurn = true;
+                upCounter = 0;
+                EnableEnemy = false;
+            }
+        
+            
+        }
+        if (PlayerPrefs.GetInt("n") >= 3)
+        {
+            WinPanel.SetActive(true);//This displays the win msg
+        }
+        if (PlayerPrefs.GetInt("Pn") >= 3)
+        {
+            LosePanel.SetActive(true);//This displays the lose msg
+        }
+    }
+    public void move()
+    {
+        //This enables the player to start moving
+        Player[index].GetComponent<PlayerController>().move = true;
+    }
+    public void PowerBar()
+    {
+
+        Player[index].GetComponent<PlayerController>().PowerBarShoot();
+    }
+    public void UpBtn()
+    {
+        //This rotates player upwards
+        if (upCounter <= 3)
+        {
+            upCounter += 1;
+            if (Player[index].transform.localScale.x > 0)
+            {
+                Player[index].transform.Rotate(0, 0, 10);
+            }
+            else if (Player[index].transform.localScale.x < 0)
+            {
+                Player[index].transform.Rotate(0, 0, -10);
+            }
+        }
+    }
+    public void DownBtn()
+    {
+
+        //This rotates player downwards
+        if (upCounter > 0)
+        {
+            if (Player[index].transform.localScale.x < 0)
+            {
+                Player[index].transform.Rotate(0, 0, 10);
+            }
+            else if (Player[index].transform.localScale.x > 0)
+            {
+                Player[index].transform.Rotate(0, 0, -10);
+            }
+            upCounter -= 1;
+        }
+    }
+    public void DisablePlayer()
+    {
+        //Disables the current active player
+        Player[index].GetComponent<PlayerController>().enabled = false;
+    }
+    public void DisableEnemy()
+    {
+        //Disables the current active enemy
+        Enemy[Enemyindex].GetComponent<EnemyAI>().enabled = false;
+    }
+    public void OnWalkShoot()
+    {
+        //This starts the aiming for player if distance is not completed and player wants to shoot
+        Player[index].GetComponent<PlayerController>().onShot();
+    }
+    public void PlayerDone()
+    {
+        EnableEnemy = true;
+    }
+    public void EnemyDone()
+    {
+        
+        PlayerSelect.SetActive(true);
+    }
+    public GameObject GetPlayer()
+    {
+        return Player[index];
+    }
+    public void OnRestartBtn()
+    {
+        SceneManager.LoadScene(0);
+    }
+    public void ExitBtn()
+    {
+        Application.Quit();
+    }
+    public void Player1Btn()
+    {
+        index = 0;//Sets the player 1 to start playing
+        EnablePlayer = true;
+    }
+    public void Player2Btn()
+    {
+        index = 1;//Sets the player 2 to start playing
+        EnablePlayer = true;
+    }
+    public void Player3Btn()
+    {
+        index = 2; //Sets the player 3 to start playing
+        EnablePlayer = true;
+    }
+}
