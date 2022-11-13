@@ -1,0 +1,66 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class EnemyHealth : MonoBehaviour
+{
+    //This script works for enemy helath
+    //Health
+    //Damage 
+    //The Win Panel
+    public HealthBar hp;
+    int damage;
+    int EnemyDeadCounter;
+    int n;
+    public GameObject WinPanel;
+
+    private void Awake()
+    {
+        n = 0;
+        EnemyDeadCounter = 0;//This counts the enemies dying
+        hp = GetComponent<HealthBar>();
+        hp.SetMaxHealth(100);
+        damage = 35;
+        PlayerPrefs.SetInt("n", 0);
+        
+    }
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //This checks if the enemy healht is zero and if the enemy is dead and counts the death and if the death is =3 it displays win panel
+        n = PlayerPrefs.GetInt("n");
+        if (hp.heal <= 0)
+        {
+            Destroy(this.gameObject);
+            EnemyDeadCounter += 1;
+            PlayerPrefs.SetInt("EnemyDead", n + EnemyDeadCounter);
+            Debug.Log("EnemyDeadCounter : " + EnemyDeadCounter);
+            PlayerPrefs.SetInt("n", PlayerPrefs.GetInt("EnemyDead"));
+            n = PlayerPrefs.GetInt("n");
+            Debug.Log("N : " + n);
+            if (EnemyDeadCounter >= 3)
+            {
+                WinPanel.SetActive(true);
+            }
+        }
+        
+    }
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+
+        if (collision.gameObject.tag == "EnemyArrow")
+        {
+            hp.SetHealth(damage);
+        }
+        if (collision.gameObject.tag == "Arrow")
+        {
+            hp.SetHealth(damage);
+        }
+    }
+    }
