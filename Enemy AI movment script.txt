@@ -1,0 +1,193 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class EnemyAI : MonoBehaviour
+{
+    public GameManager gm;
+    public GameObject EnemyPointer;
+    public GameObject firepoint;
+    public GameObject Arrow;
+    public GameObject WinPanel;
+    GameObject Player;
+
+    Animator anim;
+    Rigidbody2D rb;
+
+    public bool EnemyTurn;
+    bool startmoving;
+
+    public float MoveCloserDist;
+    public float AttackDist;
+    float Distan;
+    float movement;
+    float speed;
+    float force;
+
+    public HealthBar hp;
+    int damage;
+    int EnemyDeadCounter;
+    // Start is called before the first frame update
+    private void Awake()
+    {
+        hp = GetComponent<HealthBar>();
+        hp.SetMaxHealth(100);
+        damage = 35;
+    }
+    void Start()
+    {
+        Distan = 3f;
+        movement = 3;
+        speed = 4f;
+        anim = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody2D>();
+        EnemyDeadCounter = 0;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (EnemyTurn)
+        {
+            //When its Enemy's turn this bool is set true and everything in this starts working
+            Player = gm.GetPlayer(); //Gets Active player
+            gm.EnableEnemy = false; 
+
+            if (Player.transform.position.x < this.transform.position.x)
+            {
+                //Tells which side to face
+                transform.localScale = new Vector3(-1, 1, 1);
+            }
+            else if(Player.transform.position.x > this.transform.position.x)
+            {
+                //Tells which side to face
+                transform.localScale = new Vector3(1, 1, 1);
+            }
+            float dist = Vector2.Distance(Player.transform.position, this.transform.position);//calculates distance btw player and enemy
+
+            if (dist > MoveCloserDist)
+            {
+                Debug.Log("Move");
+
+                anim.SetBool("walk", true);
+                startmoving = true;
+                EnemyTurn = false;
+                //This works if enemy is far from player and starts moving towards player
+            }
+            else
+            {
+                //if enemy is close enough it attacks
+                anim.SetBool("walk", false);
+                Aim();
+                EnemyTurn = false;
+            }
+        }
+
+        if (startmoving)
+        {
+            //This make enemy move toward player
+            if (Distan > 0)
+            {
+
+                transform.position = Vector2.MoveTowards(transform.position, Player.transform.position, speed * Time.deltaTime);
+                 Distan -= 1 * Time.deltaTime;
+            }
+            else
+            {
+                startmoving = false;
+                Aim();
+            }
+        }
+
+
+        if (hp.heal <= 0)
+        {
+            Destroy(this.gameObject);
+            /*EnemyDeadCounter += 1;
+            if (EnemyDeadCounter >= 3)
+            {
+                WinPanel.SetActive(true);
+            }*/
+        }
+        
+    }
+   
+    public void Aim()
+    {
+        //This Aims towards player
+
+        EnemyPointer.SetActive(false);
+        anim.SetBool("walk", false);
+        anim.SetBool("attack", true);
+    }
+    public void Shoot()
+    {
+        //this shoots the arrow of enemy checks the direction and which place to face and shoot 
+        Distan = 3f;
+        anim.SetBool("attack", false);
+        GameObject g = Instantiate(Arrow, firepoint.transform.position,Quaternion.identity);
+        g.transform.Rotate(0, 0, this.transform.rotation.z);
+        Rigidbody2D rbAr = g.GetComponent<Rigidbody2D>();
+        g.transform.localScale = new Vector3(-1, 1, 1);
+        Vector2 forcedir = new Vector2(-1, 1);
+        force = Random.Range(1, 8);
+        rbAr.AddForce(forcedir * force, ForceMode2D.Impulse);
+
+        if (transform.localScale.x > 0)
+        {
+            g.transform.localScale = new Vector3(1, 1, 1);
+            Vector2 forcedirec = new Vector2(1, 1);
+            force = Random.Range(1, 8);
+            rbAr.AddForce(forcedirec * force, ForceMode2D.Impulse);
+        }
+        else if (transform.localScale.x < 0)
+        {
+
+            g.transform.localScale = new Vector3(-1, 1, 1);
+            Vector2 forcedirec = new Vector2(-1, 1);
+            force = Random.Range(1, 8);
+            rbAr.AddForce(forcedirec * force, ForceMode2D.Impulse);
+        }
+        StartCoroutine(DOne());
+    }
+    public void EnemyPointerEn()
+    {
+        EnemyPointer.SetActive(true);
+    }
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+
+        if (collision.gameObject.tag == "EnemyArrow")
+        {
+            hp.SetHealth(damage);
+        }
+        if (collision.gameObject.tag == "Arrow")
+        {
+            hp.SetHealth(damage);
+        }
+        if (collision.gameObject.tag == "Enemy")
+        {
+            jump();
+        }
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "jumpPlatform")
+        {
+            jump();
+        }
+    }
+    public void jump()
+    {
+        //Jump function of enemmy
+        Vector3 forcedir = new Vector3(0, 9f, 0);
+        rb.AddForce(forcedir, ForceMode2D.Impulse);
+    }
+    IEnumerator DOne()
+    {
+        //This helps to wait till enemy is done
+        yield return new WaitForSeconds(4f);
+        gm.DisableEnemy();//this calls the function do disable the current enemy
+        gm.EnemyDone();
+    }
+}
